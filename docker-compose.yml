@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.5.0
+    depends_on:
+      - kafka
+    entrypoint: ["sh", "-c"]
+    command: |
+      "
+      # Wait for Kafka to be ready
+      kafka-topics.sh --bootstrap-server kafka:29092 --list
+      
+      echo 'Creating Kafka topics...'
+      kafka-topics.sh --create --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic jobs
+      kafka-topics.sh --create --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic jobs.retry
+      kafka-topics.sh --create --bootstrap-server kafka:29092 --replication-factor 1 --partitions 1 --topic jobs.dlq
+
+      echo 'Successfully created topics:'
+      kafka-topics.sh --bootstrap-server kafka.29092 --list
+      "
+      
