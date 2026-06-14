@@ -9,8 +9,7 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JsonSerializer;
-import tools.jackson.databind.annotation.JsonSerialize;
-import tools.jackson.databind.ser.jdk.StringSerializer;
+import org.apache.kafka.common.serialization.StringSerializer;;
 
 import java.util.HashMap;
 import java.util.Map;

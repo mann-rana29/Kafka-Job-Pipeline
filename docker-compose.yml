@@ -41,14 +41,14 @@ services:
     command: |
       "
       # Wait for Kafka to be ready
-      kafka-topics.sh --bootstrap-server kafka:29092 --list
+      /usr/bin/kafka-topics --bootstrap-server kafka:29092 --list
       
       echo 'Creating Kafka topics...'
-      kafka-topics.sh --create --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic jobs
-      kafka-topics.sh --create --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic jobs.retry
-      kafka-topics.sh --create --bootstrap-server kafka:29092 --replication-factor 1 --partitions 1 --topic jobs.dlq
+      /usr/bin/kafka-topics --create --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic jobs
+      /usr/bin/kafka-topics --create --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic jobs.retry
+      /usr/bin/kafka-topics --create --bootstrap-server kafka:29092 --replication-factor 1 --partitions 1 --topic jobs.dlq
 
       echo 'Successfully created topics:'
-      kafka-topics.sh --bootstrap-server kafka.29092 --list
+      /usr/bin/kafka-topics --bootstrap-server kafka:29092 --list
       "
       

@@ -17,7 +17,7 @@ public enum JobType {
     public static JobType fromValue(String value){
         if(value == null) return null;
 
-        String normalized = value.trim().toUpperCase().replace("-","_").replace(" ", _);
+        String normalized = value.trim().toUpperCase().replace("-","_").replace(" ", "_");
 
         for(JobType type : JobType.values()){
             if(type.name().equals(normalized)){
