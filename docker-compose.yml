@@ -52,3 +52,26 @@ services:
       /usr/bin/kafka-topics --bootstrap-server kafka:29092 --list
       "
       
+  job-submission-service:
+    build: ./job-submission-service
+    container_name: job-submission-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - kafka
+      - redis
+    environment:
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - SPRING_DATA_REDIS_HOST=redis
+
+  worker-service:
+    build: ./worker-service
+    container_name: worker-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - kafka
+      - redis
+    environment:
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - SPRING_DATA_REDIS_HOST=redis
