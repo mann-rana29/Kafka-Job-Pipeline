@@ -7,9 +7,10 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-
     ports:
       - "2181:2181"
+    networks:
+      - pipeline-network
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
@@ -26,31 +27,24 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - pipeline-network
   
   redis:
     image: redis:7-alpine
     container_name: redis
     ports:
       - "6379:6379"
+    networks:
+      - pipeline-network
 
   kafka-init:
     image: confluentinc/cp-kafka:7.5.0
     depends_on:
       - kafka
-    entrypoint: ["sh", "-c"]
-    command: |
-      "
-      # Wait for Kafka to be ready
-      /usr/bin/kafka-topics --bootstrap-server kafka:29092 --list
-      
-      echo 'Creating Kafka topics...'
-      /usr/bin/kafka-topics --create --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic jobs
-      /usr/bin/kafka-topics --create --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic jobs.retry
-      /usr/bin/kafka-topics --create --bootstrap-server kafka:29092 --replication-factor 1 --partitions 1 --topic jobs.dlq
-
-      echo 'Successfully created topics:'
-      /usr/bin/kafka-topics --bootstrap-server kafka:29092 --list
-      "
+    entrypoint: [ "sh", "-c", "kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic jobs --partitions 3 --replication-factor 1 && kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic jobs.retry --partitions 3 --replication-factor 1 && kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic jobs.dlq --partitions 1 --replication-factor 1" ]
+    networks:
+      - pipeline-network
       
   job-submission-service:
     build: ./job-submission-service
@@ -63,6 +57,8 @@ services:
     environment:
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - SPRING_DATA_REDIS_HOST=redis
+    networks:
+      - pipeline-network
 
   worker-service:
     build: ./worker-service
@@ -75,3 +71,9 @@ services:
     environment:
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - SPRING_DATA_REDIS_HOST=redis
+    networks:
+      - pipeline-network
+
+networks:
+  pipeline-network:
+    driver: bridge
